@@ -195,7 +195,7 @@ fun RiddlesGame(fontFamily: FontFamily, neonColor: Color) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Butonul de Verificare / Next
+            // Butonul de Verificare
             Button(
                 onClick = {
                     if (!showResult) {

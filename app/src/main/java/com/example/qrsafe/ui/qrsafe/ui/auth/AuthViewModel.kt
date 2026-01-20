@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val db = AppDatabase.getInstance(application)
+
+    private val db = AppDatabase.getDatabase(application)
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
@@ -21,7 +22,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val isLoggedIn = _isLoggedIn.asStateFlow()
 
     init {
-        // Ascultăm schimbările de stare ale Firebase (logat/delogat)
         auth.addAuthStateListener { firebaseAuth ->
             _isLoggedIn.value = firebaseAuth.currentUser != null
         }
@@ -56,6 +56,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         viewModelScope.launch {
             auth.signOut()
+            // Ștergem istoricul local la delogare
             db.linkDao().clearAll()
             _authState.value = AuthState.Idle
         }
