@@ -88,4 +88,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.airbnb.android:lottie-compose:6.0.0")
 
+    // Pentru a descărca text/XML simplu
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+
+    // Pentru a încărca imagini (Coil)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
 }
