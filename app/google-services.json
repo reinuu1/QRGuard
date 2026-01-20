@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074638782364",
+    "project_id": "qrsafe-27936",
+    "storage_bucket": "qrsafe-27936.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074638782364:android:e54eee172938e566719259",
+        "android_client_info": {
+          "package_name": "com.example.qrsafe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2nZ_kN2PN7lbFvONB6ebnA3C40hxJlC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
