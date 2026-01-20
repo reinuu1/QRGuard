@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "links")
 data class LinkEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val url: String,
-    val status: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val date: String,     // Folosim numele 'date'
+    val isSafe: Boolean   // Folosim Boolean
 )

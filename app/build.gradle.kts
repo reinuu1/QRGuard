@@ -75,7 +75,8 @@ dependencies {
 
     // Scanner (Vechi)
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    implementation("com.google.zxing:core:3.5.3")
+    //implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.2")
     implementation("androidx.appcompat:appcompat:1.7.0")
 
     testImplementation(libs.junit)
@@ -92,6 +93,13 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
     // Pentru a încărca imagini (Coil)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    // Scanare QR
+    implementation("com.google.zxing:core:3.5.2")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    // Navigare și UI
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("io.coil-kt:coil-compose:2.5.0")
 
 }
