@@ -1,74 +1,91 @@
 package com.example.qrsafe.ui.qrsafe.ui.scan
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.qrsafe.ui.qrsafe.data.AppDatabase
+import com.example.qrsafe.ui.qrsafe.data.CryptoManager
+import com.example.qrsafe.ui.qrsafe.data.LinkDao
 import com.example.qrsafe.ui.qrsafe.data.LinkEntity
-// --- IMPORTURILE CRITICE CARE LIPSEAU ---
 import com.example.qrsafe.ui.qrsafe.network.VirusTotalService
-// ----------------------------------------
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Date
 
-class ScanViewModel(application: Application) : AndroidViewModel(application) {
+class ScanViewModel(private val linkDao: LinkDao) : ViewModel() {
 
-    private val db = AppDatabase.getInstance(application)
+    private val _scanResult = MutableStateFlow<String?>(null)
+    val scanResult = _scanResult.asStateFlow()
 
-    private val _scanState = MutableStateFlow<ScanResultState>(ScanResultState.Idle)
-    val scanState = _scanState.asStateFlow()
+    private val _virusStatus = MutableStateFlow<String>("UNCHECKED")
+    val virusStatus = _virusStatus.asStateFlow()
 
-    fun checkUrl(url: String) {
-        if (url.isBlank()) return
+    private val _isEncrypted = MutableStateFlow(false)
+    val isEncrypted = _isEncrypted.asStateFlow()
 
-        _scanState.value = ScanResultState.Loading
+    private val _decryptedResult = MutableStateFlow<String?>(null)
+    val decryptedResult = _decryptedResult.asStateFlow()
 
-        viewModelScope.launch(Dispatchers.IO) {
+    fun onScanResult(result: String) {
+        if (result.startsWith("QRSAFE:")) {
+            _scanResult.value = result
+            _isEncrypted.value = true
+            _virusStatus.value = "SECURE_LOCKED"
+        } else {
+            _scanResult.value = result
+            _isEncrypted.value = false
+            _decryptedResult.value = result
+            checkLinkSafety(result)
+            saveToHistory(result, isSafe = false)
+        }
+    }
+
+    fun attemptDecryption(password: String) {
+        val rawData = _scanResult.value ?: return
+        val result = CryptoManager.decrypt(rawData, password)
+
+        if (result != null) {
+            _decryptedResult.value = result
+            _isEncrypted.value = false
+            checkLinkSafety(result)
+            saveToHistory(result, isSafe = true)
+        } else {
+            _virusStatus.value = "WRONG_PASSWORD"
+        }
+    }
+
+    fun resetScanner() {
+        _scanResult.value = null
+        _virusStatus.value = "UNCHECKED"
+        _isEncrypted.value = false
+        _decryptedResult.value = null
+    }
+
+    private fun checkLinkSafety(url: String) {
+        _virusStatus.value = "CHECKING"
+        viewModelScope.launch {
             try {
-                // 1. Codăm URL-ul
-                val encodedUrl = VirusTotalService.encodeUrlForVirusTotal(url)
-
-                // 2. Apelăm API-ul
-                val response = VirusTotalService.api.getUrlReport(encodedUrl)
-
-                if (response.isSuccessful) {
-                    // Aici era problema cu 'malicious' nerecunoscut.
-                    // Trebuie să navigăm corect prin structura JSON.
-                    val attributes = response.body()?.data?.attributes
-                    val stats = attributes?.stats
-
-                    if (stats != null) {
-                        val malicious = stats.malicious
-                        val harmless = stats.harmless
-
-                        val status = if (malicious > 0) "MALICIOUS" else "SAFE"
-
-                        val entity = LinkEntity(url = url, status = status)
-                        db.linkDao().insert(entity)
-
-                        _scanState.value = ScanResultState.Success(entity)
-                    } else {
-                        _scanState.value = ScanResultState.Error("Nu există date (Stats null).")
-                    }
-                } else {
-                    _scanState.value = ScanResultState.Error("Eroare API: ${response.code()}")
-                }
+                val isSafe = VirusTotalService.checkUrl(url)
+                _virusStatus.value = if (isSafe) "SAFE" else "MALICIOUS"
+                saveToHistory(url, isSafe)
             } catch (e: Exception) {
-                _scanState.value = ScanResultState.Error("Eroare rețea: ${e.message}")
+                _virusStatus.value = "UNKNOWN"
             }
         }
     }
 
-    fun resetState() {
-        _scanState.value = ScanResultState.Idle
+    private fun saveToHistory(url: String, isSafe: Boolean) {
+        viewModelScope.launch {
+            try {
+                // Aici folosim structura corecta din Pasul 1
+                linkDao.insertLink(LinkEntity(
+                    id = 0,
+                    url = url,
+                    date = Date().toString(),
+                    isSafe = isSafe
+                ))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
-}
-
-sealed class ScanResultState {
-    object Idle : ScanResultState()
-    object Loading : ScanResultState()
-    data class Success(val link: LinkEntity) : ScanResultState()
-    data class Error(val message: String) : ScanResultState()
 }

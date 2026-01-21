@@ -17,21 +17,23 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+// --- FIX IMPORTURI ---
+import com.example.qrsafe.ui.qrsafe.data.AppDatabase
 import com.example.qrsafe.ui.qrsafe.data.LinkEntity
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.example.qrsafe.ui.qrsafe.ui.AppViewModelFactory
 
 @Composable
-fun HistoryScreen(
-    viewModel: HistoryViewModel = viewModel()
-) {
-    val historyItems by viewModel.historyList.collectAsState()
-    val uriHandler = LocalUriHandler.current // Unealta pentru deschis browserul
+fun HistoryScreen() {
     val context = LocalContext.current
+    // FIX: Acum recunoaște getDatabase pentru că am importat AppDatabase
+    val db = AppDatabase.getDatabase(context)
 
-    LaunchedEffect(Unit) {
-        viewModel.loadHistory()
-    }
+    val viewModel: HistoryViewModel = viewModel(factory = AppViewModelFactory(db.linkDao()))
+
+    // FIX: Variabila corectă din ViewModel este 'history'
+    val historyItems by viewModel.history.collectAsState()
+
+    val uriHandler = LocalUriHandler.current
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
@@ -39,23 +41,13 @@ fun HistoryScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Istoric Scanări",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
+            Text("Istoric Scanări", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             if (historyItems.isNotEmpty()) {
                 IconButton(onClick = { viewModel.clearHistory() }) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Șterge Tot",
-                        tint = Color.Red
-                    )
+                    Icon(Icons.Default.Delete, contentDescription = "Șterge Tot", tint = Color.Red)
                 }
             }
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         if (historyItems.isEmpty()) {
@@ -66,15 +58,10 @@ fun HistoryScreen(
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(historyItems) { item ->
                     HistoryItemCard(item) {
-                        // LOGICA DE CLICK
-                        if (item.status == "SAFE") {
-                            try {
-                                uriHandler.openUri(item.url)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Nu pot deschide link-ul", Toast.LENGTH_SHORT).show()
-                            }
+                        if (item.isSafe) {
+                            try { uriHandler.openUri(item.url) } catch (e: Exception) { Toast.makeText(context, "Eroare link", Toast.LENGTH_SHORT).show() }
                         } else {
-                            Toast.makeText(context, "⚠️ Link-ul este periculos! Nu îl deschidem.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "⚠️ Link periculos!", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -85,36 +72,17 @@ fun HistoryScreen(
 
 @Composable
 fun HistoryItemCard(item: LinkEntity, onClick: () -> Unit) {
-    val isSafe = item.status == "SAFE"
+    val isSafe = item.isSafe
     val bgColor = if (isSafe) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
     val icon = if (isSafe) "✅" else "⚠️"
 
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    val dateString = dateFormat.format(item.timestamp)
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = bgColor),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.clickable { onClick() } // Facem cardul apăsabil
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    Card(colors = CardDefaults.cardColors(containerColor = bgColor), elevation = CardDefaults.cardElevation(2.dp), modifier = Modifier.clickable { onClick() }) {
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(text = icon, style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(
-                    text = item.url,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
-                Text(
-                    text = dateString,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Text(text = item.url, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(text = item.date, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
     }
