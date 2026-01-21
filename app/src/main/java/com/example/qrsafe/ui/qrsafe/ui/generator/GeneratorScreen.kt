@@ -18,12 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.QrCode2
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,11 +48,24 @@ fun GeneratorScreen() {
     val neonGlow = colorResource(id = R.color.cyber_glow)
     val cyberPurple = colorResource(id = R.color.cyber_purple)
 
-    var contentText by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // --- STARE PENTRU MODUL DE GENERARE ---
+    // 0 = Secret/Text, 1 = Wi-Fi, 2 = Contact
+    var selectedMode by remember { mutableStateOf(0) }
 
-    // --- STARE NOUĂ PENTRU VIZIBILITATE PAROLĂ ---
+    // Variabile pentru SECRET
+    var contentText by remember { mutableStateOf("") }
+    var secretPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // Variabile pentru WI-FI
+    var wifiSsid by remember { mutableStateOf("") }
+    var wifiPassword by remember { mutableStateOf("") }
+    var wifiPassVisible by remember { mutableStateOf(false) }
+
+    // Variabile pentru CONTACT (vCard)
+    var contactName by remember { mutableStateOf("") }
+    var contactPhone by remember { mutableStateOf("") }
+    var contactEmail by remember { mutableStateOf("") }
 
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
@@ -68,73 +76,96 @@ fun GeneratorScreen() {
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Titlu
-        Text(
-            text = "SECURE GENERATOR",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = neonGlow,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+        Text("QR GENERATOR PRO", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = neonGlow, modifier = Modifier.padding(bottom = 16.dp))
 
-        // --- INPUT MESAJ / LINK ---
-        OutlinedTextField(
-            value = contentText,
-            onValueChange = { contentText = it },
-            label = { Text("Link sau Mesaj Secret") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = neonGlow,
-                unfocusedBorderColor = Color.Gray,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedLabelColor = neonGlow,
-                unfocusedLabelColor = Color.Gray
-            )
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // --- INPUT PAROLĂ (MODIFICAT CU OCHI) ---
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Parolă (Opțional)") },
-            // AICI E LOGICA: Dacă e vizibil -> Text simplu, Altfel -> Steluțe
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                // AICI E BUTONUL OCHI
-                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Ascunde parola" else "Arată parola"
-
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, contentDescription = description, tint = neonGlow)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = neonGlow,
-                unfocusedBorderColor = Color.Gray,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedLabelColor = neonGlow,
-                unfocusedLabelColor = Color.Gray
-            )
-        )
+        // --- BARA DE SELECȚIE (TABS) ---
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            ModeButton(icon = Icons.Default.Lock, label = "Secret", isSelected = selectedMode == 0) {
+                selectedMode = 0
+                qrBitmap = null
+            }
+            ModeButton(icon = Icons.Default.Wifi, label = "Wi-Fi", isSelected = selectedMode == 1) {
+                selectedMode = 1
+                qrBitmap = null
+            }
+            ModeButton(icon = Icons.Default.Person, label = "Contact", isSelected = selectedMode == 2) {
+                selectedMode = 2
+                qrBitmap = null
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // BUTON GENERARE
+        // --- FORMULAR DINAMIC ÎN FUNCȚIE DE MOD ---
+        when (selectedMode) {
+            0 -> { // MOD SECRET
+                Text("Criptează un mesaj sau link", color = Color.Gray, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CustomTextField(value = contentText, onValueChange = { contentText = it }, label = "Mesaj sau Link Secret", icon = Icons.Default.Message)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomPasswordField(
+                    value = secretPassword,
+                    onValueChange = { secretPassword = it },
+                    isVisible = passwordVisible,
+                    onToggle = { passwordVisible = !passwordVisible },
+                    label = "Parolă Protecție (Opțional)"
+                )
+            }
+            1 -> { // MOD WI-FI
+                Text("Generează QR pentru conectare Wi-Fi", color = Color.Gray, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CustomTextField(value = wifiSsid, onValueChange = { wifiSsid = it }, label = "Nume Rețea (SSID)", icon = Icons.Default.Wifi)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomPasswordField(
+                    value = wifiPassword,
+                    onValueChange = { wifiPassword = it },
+                    isVisible = wifiPassVisible,
+                    onToggle = { wifiPassVisible = !wifiPassVisible },
+                    label = "Parolă Wi-Fi"
+                )
+            }
+            2 -> { // MOD CONTACT
+                Text("Carte de vizită digitală (vCard)", color = Color.Gray, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CustomTextField(value = contactName, onValueChange = { contactName = it }, label = "Nume Complet", icon = Icons.Default.Person)
+                Spacer(modifier = Modifier.height(8.dp))
+                CustomTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = "Număr Telefon", icon = Icons.Default.Phone, isNumber = true)
+                Spacer(modifier = Modifier.height(8.dp))
+                CustomTextField(value = contactEmail, onValueChange = { contactEmail = it }, label = "Adresă Email", icon = Icons.Default.Email)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // --- BUTON GENERARE ---
         Button(
             onClick = {
-                if (contentText.isNotEmpty()) {
-                    val finalData = if (password.isNotEmpty()) {
-                        CryptoManager.encrypt(contentText, password)
-                    } else {
-                        contentText
+                val dataToEncode = when (selectedMode) {
+                    0 -> { // Logică Secret
+                        if (contentText.isNotEmpty()) {
+                            if (secretPassword.isNotEmpty()) CryptoManager.encrypt(contentText, secretPassword) else contentText
+                        } else null
                     }
-                    qrBitmap = generateQrBitmap(finalData)
+                    1 -> { // Logică Wi-Fi (Format Standard)
+                        if (wifiSsid.isNotEmpty()) "WIFI:S:$wifiSsid;T:WPA;P:$wifiPassword;;" else null
+                    }
+                    2 -> { // Logică vCard (Format Standard)
+                        if (contactName.isNotEmpty()) {
+                            "BEGIN:VCARD\nVERSION:3.0\nN:$contactName;;;;\nFN:$contactName\nTEL;TYPE=CELL:$contactPhone\nEMAIL:$contactEmail\nEND:VCARD"
+                        } else null
+                    }
+                    else -> null
+                }
+
+                if (dataToEncode != null) {
+                    qrBitmap = generateQrBitmap(dataToEncode)
+                } else {
+                    Toast.makeText(context, "Completează câmpurile!", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -143,12 +174,12 @@ fun GeneratorScreen() {
         ) {
             Icon(Icons.Default.QrCode2, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("GENEREAZĂ CODUL", fontWeight = FontWeight.Bold)
+            Text("GENEREAZĂ QR", fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // REZULTAT
+        // --- PREVIEW REZULTAT ---
         if (qrBitmap != null) {
             Box(
                 modifier = Modifier
@@ -158,35 +189,29 @@ fun GeneratorScreen() {
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    bitmap = qrBitmap!!.asImageBitmap(),
-                    contentDescription = "QR",
-                    modifier = Modifier.fillMaxSize()
-                )
-                // Dacă e criptat, punem un lacăt roșu peste el
-                if (password.isNotEmpty()) {
-                    Icon(Icons.Default.Lock, contentDescription = "Secured", tint = Color(0xFFD50000), modifier = Modifier.size(48.dp))
+                Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "QR", modifier = Modifier.fillMaxSize())
+                // Iconiță centrală în funcție de mod
+                val overlayIcon = when(selectedMode) {
+                    0 -> if(secretPassword.isNotEmpty()) Icons.Default.Lock else null
+                    1 -> Icons.Default.Wifi
+                    2 -> Icons.Default.Person
+                    else -> null
+                }
+                if (overlayIcon != null) {
+                    Icon(overlayIcon, null, tint = if(selectedMode==0 && secretPassword.isNotEmpty()) Color.Red else Color.Black, modifier = Modifier.size(48.dp))
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Butoane Save & Share
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Button(
-                    onClick = { saveImageToGallery(context, qrBitmap!!) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
+                Button(onClick = { saveImageToGallery(context, qrBitmap!!) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))) {
+                    Icon(Icons.Default.Save, null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("SALVEAZĂ")
                 }
-
-                Button(
-                    onClick = { shareImage(context, qrBitmap!!) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2979FF))
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null)
+                Button(onClick = { shareImage(context, qrBitmap!!) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2979FF))) {
+                    Icon(Icons.Default.Share, null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("SHARE")
                 }
@@ -195,7 +220,62 @@ fun GeneratorScreen() {
     }
 }
 
-// --- Logică Tehnică ---
+// --- Componente UI Reutilizabile ---
+
+@Composable
+fun ModeButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
+    val color = if (isSelected) colorResource(id = R.color.cyber_glow) else Color.Gray
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        IconButton(onClick = onClick, modifier = Modifier.background(if(isSelected) color.copy(alpha=0.2f) else Color.Transparent, androidx.compose.foundation.shape.CircleShape)) {
+            Icon(icon, contentDescription = label, tint = color)
+        }
+        Text(label, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, isNumber: Boolean = false) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, null, tint = colorResource(id = R.color.cyber_glow)) },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = if(isNumber) KeyboardOptions(keyboardType = KeyboardType.Phone) else KeyboardOptions.Default,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = colorResource(id = R.color.cyber_glow),
+            unfocusedBorderColor = Color.Gray,
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
+        )
+    )
+}
+
+@Composable
+fun CustomPasswordField(value: String, onValueChange: (String) -> Unit, isVisible: Boolean, onToggle: () -> Unit, label: String) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        leadingIcon = { Icon(Icons.Default.Lock, null, tint = colorResource(id = R.color.cyber_glow)) },
+        trailingIcon = {
+            IconButton(onClick = onToggle) {
+                Icon(if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = colorResource(id = R.color.cyber_glow),
+            unfocusedBorderColor = Color.Gray,
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
+        )
+    )
+}
+
+// --- Logică Backend (QR & Save) ---
 
 fun generateQrBitmap(content: String): Bitmap? {
     return try {
@@ -215,7 +295,6 @@ fun saveImageToGallery(context: Context, bitmap: Bitmap) {
     val filename = "QR_SAFE_${System.currentTimeMillis()}.jpg"
     var fos: OutputStream? = null
     var imageUri: Uri? = null
-
     try {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
@@ -231,9 +310,7 @@ fun saveImageToGallery(context: Context, bitmap: Bitmap) {
         Toast.makeText(context, "Salvat în Galerie!", Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
         Toast.makeText(context, "Eroare la salvare", Toast.LENGTH_SHORT).show()
-    } finally {
-        fos?.close()
-    }
+    } finally { fos?.close() }
 }
 
 fun shareImage(context: Context, bitmap: Bitmap) {
