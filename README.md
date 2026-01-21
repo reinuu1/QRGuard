@@ -1,0 +1,1 @@
+Scanează link-uri, atât in aplicație de dat “paste”, cât și in background atunci când selectez in afara un link sau copiez sa imi spună dacă e malițios sau nu (Safe/Malicious), coduri QR. Toate astea vor fi posibile prin call-uri de API-uri pe VirusTotal care e un tool online de are o bază de date cu link-uri, QR code-uri.
