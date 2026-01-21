@@ -63,6 +63,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.safetynet)
+    implementation("com.google.firebase:firebase-firestore-ktx:24.10.1")
 
     // Room
     implementation(libs.androidx.room.runtime)
