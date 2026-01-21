@@ -9,15 +9,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ACUM ACCEPTA LinkDao (ceea ce ii trimite Factory-ul)
 class HistoryViewModel(private val linkDao: LinkDao) : ViewModel() {
 
-    val history: StateFlow<List<LinkEntity>> = linkDao.getAllLinks()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // --- AICI ESTE CHEIA: Variabila trebuie să se numească 'allLinks' ---
+    val allLinks: StateFlow<List<LinkEntity>> = linkDao.getAllLinks()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun clearHistory() {
         viewModelScope.launch {
-            linkDao.clearAll()
+            linkDao.deleteAll()
         }
     }
 }

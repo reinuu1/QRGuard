@@ -35,10 +35,19 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.qrsafe.R
 import com.example.qrsafe.ui.qrsafe.data.AcademyRepository
-import com.example.qrsafe.ui.qrsafe.data.CyberGuide
 import com.example.qrsafe.ui.qrsafe.data.CyberRiddle
 import com.example.qrsafe.ui.qrsafe.receiver.DailyAlertReceiver
 import kotlinx.coroutines.launch
+
+// --- MODEL DATE MITRE (Local pentru a evita erori de import) ---
+data class MitreTechnique(
+    val id: String,
+    val name: String,
+    val tactic: String,
+    val description: String,
+    val mitigation: String,
+    val color: Color
+)
 
 @Composable
 fun EducationScreen() {
@@ -50,7 +59,7 @@ fun EducationScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     val neonGlow = colorResource(id = R.color.cyber_glow)
 
-    // --- LOGICA DE PERMISIUNI (NOU) ---
+    // --- LOGICA DE PERMISIUNI ---
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -68,25 +77,39 @@ fun EducationScreen() {
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("CYBER ACADEMY", fontFamily = orbitronFamily, fontSize = 28.sp, color = neonGlow, modifier = Modifier.padding(bottom = 16.dp))
+        Text(
+            text = "CYBER ACADEMY",
+            fontFamily = orbitronFamily,
+            fontSize = 28.sp,
+            color = neonGlow,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-        Row(modifier = Modifier.fillMaxWidth().background(Color(0xFF1A1A2E), RoundedCornerShape(12.dp)).padding(4.dp)) {
-            TabButton("GUIDES", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
+        // TAB-URI
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF1A1A2E), RoundedCornerShape(12.dp))
+                .padding(4.dp)
+        ) {
+            TabButton("MITRE ATT&CK", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
             TabButton("RIDDLES", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // SCHIMBARE CONTINUT
         if (selectedTab == 0) {
-            GuidesList()
+            // AICI AM PUS NOUA LIBRĂRIE MITRE
+            MitreLibraryList()
+
             Spacer(modifier = Modifier.height(30.dp))
             Divider(color = Color.Gray)
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Simulare Atac", color = Color.Gray, fontSize = 14.sp)
+            Text("Antrenament Defensiv", color = Color.Gray, fontSize = 14.sp)
             Button(
                 onClick = {
-                    // VERIFICĂM DACĂ AVEM PERMISIUNEA ÎNAINTE SĂ PROGRAMĂM
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                             scheduleTestAlert(context)
@@ -111,30 +134,142 @@ fun EducationScreen() {
     }
 }
 
-// ... GuidesList rămâne la fel ...
+// --- NOUA LISTĂ MITRE (PROFESIONALĂ) ---
 @Composable
-fun GuidesList() {
-    val guides = listOf(
-        CyberGuide("Phishing 101", "Nu da niciodată click pe link-uri suspecte.", Icons.Default.Email),
-        CyberGuide("Parole Beton", "Folosește minim 12 caractere, simboluri și cifre.", Icons.Default.Lock),
-        CyberGuide("Wi-Fi Public", "Nu intra pe aplicația de bancă pe Wi-Fi public.", Icons.Default.Wifi),
-        CyberGuide("Update-uri", "Fă update la telefon imediat ce apare notificarea.", Icons.Default.SystemUpdate)
+fun MitreLibraryList() {
+    // Date reale MITRE ATT&CK
+    val techniques = listOf(
+        MitreTechnique(
+            id = "T1566",
+            name = "Phishing",
+            tactic = "Initial Access",
+            description = "Adversarii trimite mesaje frauduloase pentru a păcăli utilizatorii să dezvăluie date sensibile sau să instaleze malware.",
+            mitigation = "M1021: User Training. Nu deschide atașamente sau link-uri din surse necunoscute.",
+            color = Color(0xFFFF5252) // Roșu
+        ),
+        MitreTechnique(
+            id = "T1003",
+            name = "OS Credential Dumping",
+            tactic = "Credential Access",
+            description = "Hackerii încearcă să extragă hash-uri de parole din memoria sistemului (ex: LSASS pe Windows) pentru a fura conturi.",
+            mitigation = "M1043: Credential Protection. Limitează drepturile de administrator local.",
+            color = Color(0xFFE040FB) // Mov
+        ),
+        MitreTechnique(
+            id = "T1204",
+            name = "User Execution",
+            tactic = "Execution",
+            description = "Atacatorul se bazează pe faptul că utilizatorul va da click pe un fișier malițios (ex: un PDF fals).",
+            mitigation = "M1050: Exploit Protection. Folosește extensii de browser care blochează scripturi malițioase.",
+            color = Color(0xFFFFAB00) // Portocaliu
+        ),
+        MitreTechnique(
+            id = "T1078",
+            name = "Valid Accounts",
+            tactic = "Defense Evasion",
+            description = "Folosirea conturilor furate (username/parolă validă) pentru a trece neobservat prin sistemele de securitate.",
+            mitigation = "M1032: Multi-Factor Authentication (MFA). Activează 2FA peste tot.",
+            color = Color(0xFF00E676) // Verde
+        ),
+        MitreTechnique(
+            id = "T1059",
+            name = "Command Interpreter",
+            tactic = "Execution",
+            description = "Abuzarea de PowerShell sau CMD pentru a rula comenzi malițioase fără a instala programe noi.",
+            mitigation = "M1038: Execution Prevention. Restricționează rularea scripturilor PowerShell.",
+            color = Color(0xFF2979FF) // Albastru
+        )
     )
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        guides.forEach { guide ->
-            var expanded by remember { mutableStateOf(false) }
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF162032)),
-                modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2C5364), RoundedCornerShape(12.dp)).clickable { expanded = !expanded }
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(guide.icon, contentDescription = null, tint = Color(0xFF00FF9D))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = guide.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        // Header
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF212121)),
+            modifier = Modifier.fillMaxWidth().border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+        ) {
+            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Security, null, tint = Color(0xFF00FF9D))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("MITRE ATT&CK® Matrix", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("Bază de date oficială a tacticilor adversare", color = Color.Gray, fontSize = 11.sp)
+                }
+            }
+        }
+
+        // Listare Carduri
+        techniques.forEach { item ->
+            MitreCard(item)
+        }
+    }
+}
+
+@Composable
+fun MitreCard(item: MitreTechnique) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, item.color.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .clickable { expanded = !expanded }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header Card
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    // ID Badge
+                    Surface(
+                        color = item.color.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Text(
+                            text = item.id,
+                            color = item.color,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
-                    AnimatedVisibility(visible = expanded) {
-                        Text(text = guide.description, color = Color.LightGray, modifier = Modifier.padding(top = 8.dp))
+                    Text(text = item.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+            }
+
+            // Continut Expandabil
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Divider(color = Color.Gray.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("TACTICĂ:", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(item.tactic, color = item.color, fontSize = 14.sp)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("DESCRIERE:", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(item.description, color = Color.LightGray, fontSize = 14.sp)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Sectiune Mitigare (Blue Team)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF2C3E50), RoundedCornerShape(8.dp))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Shield, null, tint = Color(0xFF64B5F6), modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(item.mitigation, color = Color(0xFF64B5F6), fontSize = 12.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -142,14 +277,15 @@ fun GuidesList() {
     }
 }
 
-// ... RiddlesGame rămâne la fel ...
+// --- RIDDLES GAME (Rămâne neschimbat) ---
 @Composable
 fun RiddlesGame(fontFamily: FontFamily, neonColor: Color, repository: AcademyRepository) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val riddles = listOf(
         CyberRiddle("Ce este 'Phishing'?", listOf("Un sport", "Furt de date", "Un virus"), 1, "Hackerii 'pescuiesc' datele tale."),
-        CyberRiddle("Care parolă e sigură?", listOf("123456", "Andrei2024", "P@nD0rA!#9"), 2, "Complexitatea contează.")
+        CyberRiddle("Care parolă e sigură?", listOf("123456", "Andrei2024", "P@nD0rA!#9"), 2, "Complexitatea contează."),
+        CyberRiddle("Ai câștigat un iPhone. Ce faci?", listOf("Click!", "Închid", "Dau datele"), 1, "E o țeapă clasică.")
     )
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
     var selectedAnswer by remember { mutableIntStateOf(-1) }
@@ -220,30 +356,22 @@ fun TabButton(text: String, isSelected: Boolean, modifier: Modifier, onClick: ()
     }
 }
 
-// --- ACTUALIZARE FUNCȚIE ALARMĂ (MODIFICATĂ SĂ FIE MAI SIGURĂ) ---
+// --- ALARMĂ ---
 fun scheduleTestAlert(context: Context) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     val intent = Intent(context, DailyAlertReceiver::class.java)
-
-    // Flag-urile sunt CRITICE pentru Android 12+
     val pendingIntent = PendingIntent.getBroadcast(
         context,
         0,
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
-
-    // Setăm timpul (acum + 10 secunde)
     val triggerTime = System.currentTimeMillis() + 10_000
-
     try {
-        // Folosim set() în loc de setExact() pentru că setExact necesită o altă permisiune specială
-        // set() este suficient pentru un demo și nu dă crash
         alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-
         Toast.makeText(context, "⚠️ Simulare programată! (Așteaptă 10s)", Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
         e.printStackTrace()
-        Toast.makeText(context, "Eroare la programare: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Eroare: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 }

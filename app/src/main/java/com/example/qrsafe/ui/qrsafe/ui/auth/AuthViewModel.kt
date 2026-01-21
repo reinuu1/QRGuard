@@ -57,7 +57,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             auth.signOut()
             // Ștergem istoricul local la delogare
-            db.linkDao().clearAll()
+            db.linkDao().deleteAll()
             _authState.value = AuthState.Idle
         }
     }

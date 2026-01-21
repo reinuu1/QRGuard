@@ -103,4 +103,14 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // --- CAMERAX (OBLIGATORIU PENTRU ECRANUL NOU DE SCANARE) ---
+    val camerax_version = "1.3.1"
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+
+    // --- GUAVA (OBLIGATORIU PENTRU EROAREA ListenableFuture) ---
+    implementation("com.google.guava:guava:31.1-android")
+
 }
