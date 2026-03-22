@@ -1,9 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     alias(libs.plugins.google.services)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY")?.trim().orEmpty()
 
 android {
     namespace = "com.example.qrsafe" // VERIFICĂ: Trebuie să fie la fel ca în google-services.json
@@ -15,6 +24,9 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        // Gemini: add GEMINI_API_KEY=your_key to local.properties (never commit keys)
+        buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -37,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14" // Compatibil cu Kotlin 1.9.24
@@ -112,5 +125,10 @@ dependencies {
 
     // --- GUAVA (OBLIGATORIU PENTRU EROAREA ListenableFuture) ---
     implementation("com.google.guava:guava:31.1-android")
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // SDK-ul oficial Google AI pentru Android
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
 }

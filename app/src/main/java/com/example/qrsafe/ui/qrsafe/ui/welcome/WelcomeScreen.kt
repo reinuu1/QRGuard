@@ -88,26 +88,25 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // TITLU (QR SAFE)
             Text(
-                text = "QR GUARD",
+                text = "QR SAFE · QWISH",
                 fontFamily = orbitronFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 42.sp,
+                fontSize = 36.sp,
                 color = neonGlow,
-                letterSpacing = 2.sp
+                letterSpacing = 2.sp,
+                textAlign = TextAlign.Center,
             )
 
-            // SUBTITLU - Font Orbitron Medium
             Text(
-                text = "SECURE SCANNING PROTOCOL",
+                text = "SCAN · ÎNVĂȚARE · ASISTENT AI (QWISH)",
                 fontFamily = orbitronFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 color = Color.LightGray,
-                letterSpacing = 4.sp,
+                letterSpacing = 3.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
 
             Spacer(modifier = Modifier.height(100.dp))

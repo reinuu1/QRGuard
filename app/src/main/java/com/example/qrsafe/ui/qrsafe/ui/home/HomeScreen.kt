@@ -32,7 +32,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("QR Guard") },
+                title = { Text("QR Safe · Qwish") },
                 actions = {
                     IconButton(onClick = {
                         viewModel.logout()

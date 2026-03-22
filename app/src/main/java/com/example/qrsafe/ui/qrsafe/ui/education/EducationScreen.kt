@@ -52,10 +52,10 @@ data class MitreTechnique(
 @Composable
 fun EducationScreen() {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val repository = remember { AcademyRepository() }
     val orbitronFamily = FontFamily.Default
 
+    // Stare pentru Tab-ul selectat (0=Mitre, 1=Riddles, 2=Chat)
     var selectedTab by remember { mutableIntStateOf(0) }
     val neonGlow = colorResource(id = R.color.cyber_glow)
 
@@ -74,62 +74,77 @@ fun EducationScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
     ) {
         Text(
-            text = "CYBER ACADEMY",
+            text = "QWISH ACADEMY",
             fontFamily = orbitronFamily,
             fontSize = 28.sp,
             color = neonGlow,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        Text(
+            text = "QR Safe · educație & antrenament",
+            color = Color.Gray,
+            fontSize = 13.sp,
+            modifier = Modifier.padding(bottom = 12.dp),
         )
 
-        // TAB-URI
+        // --- ZONA DE TAB-URI (Acum sunt 3) ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF1A1A2E), RoundedCornerShape(12.dp))
                 .padding(4.dp)
         ) {
-            TabButton("MITRE ATT&CK", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
+            TabButton("MITRE", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
             TabButton("RIDDLES", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
+            TabButton("QWISH AI", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // SCHIMBARE CONTINUT
-        if (selectedTab == 0) {
-            // AICI AM PUS NOUA LIBRĂRIE MITRE
-            MitreLibraryList()
-
-            Spacer(modifier = Modifier.height(30.dp))
-            Divider(color = Color.Gray)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Antrenament Defensiv", color = Color.Gray, fontSize = 14.sp)
-            Button(
-                onClick = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                            scheduleTestAlert(context)
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    } else {
-                        scheduleTestAlert(context)
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        when (selectedTab) {
+            0 -> Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
             ) {
-                Icon(Icons.Default.NotificationsActive, null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("PROGRAMEAZĂ SIMULARE (10s)")
+                MitreLibraryList()
+                Spacer(modifier = Modifier.height(30.dp))
+                HorizontalDivider(color = Color.Gray)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Antrenament Defensiv", color = Color.Gray, fontSize = 14.sp)
+                Button(
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                                scheduleTestAlert(context)
+                            } else {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        } else {
+                            scheduleTestAlert(context)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                ) {
+                    Icon(Icons.Default.NotificationsActive, null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("PROGRAMEAZĂ SIMULARE (10s)")
+                }
             }
-
-        } else {
-            RiddlesGame(orbitronFamily, neonGlow, repository)
+            1 -> Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                RiddlesGame(orbitronFamily, neonGlow, repository)
+            }
+            2 -> ChatScreen(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -137,7 +152,6 @@ fun EducationScreen() {
 // --- NOUA LISTĂ MITRE (PROFESIONALĂ) ---
 @Composable
 fun MitreLibraryList() {
-    // Date reale MITRE ATT&CK
     val techniques = listOf(
         MitreTechnique(
             id = "T1566",
@@ -197,7 +211,6 @@ fun MitreLibraryList() {
             }
         }
 
-        // Listare Carduri
         techniques.forEach { item ->
             MitreCard(item)
         }
@@ -216,10 +229,8 @@ fun MitreCard(item: MitreTechnique) {
             .clickable { expanded = !expanded }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header Card
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    // ID Badge
                     Surface(
                         color = item.color.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(4.dp),
@@ -243,10 +254,9 @@ fun MitreCard(item: MitreTechnique) {
                 )
             }
 
-            // Continut Expandabil
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
-                    Divider(color = Color.Gray.copy(alpha = 0.3f))
+                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text("TACTICĂ:", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -259,7 +269,6 @@ fun MitreCard(item: MitreTechnique) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Sectiune Mitigare (Blue Team)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
